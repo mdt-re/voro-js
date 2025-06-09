@@ -1,0 +1,43 @@
+{
+	"name": "@mdt-re/voro-js",
+	"version": "1.0.0",
+	"description": "A WebAssembly wrapper for the Voro++ library for 3D Voronoi cell computation.",
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"browser": "dist/browser.js",
+	"types": "dist/index.d.ts",
+	
+	"NOTHING": {
+	"build": "npm run build:cpp && npm run build:js",
+	"build:cpp": "emcc -O3 --bind -o dist/voro_native.js src/voro_wrapper.cpp voro++/src/cell.cc voro++/src/common.cc voro++/src/container.cc voro++/src/c_loops.cc voro++/src/unitcell.cc voro++/src/v_base.cc voro++/src/v_compute.cc voro++/src/wall.cc -I./voro++/src -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='createVoroModule' -s ALLOW_MEMORY_GROWTH=1 -s ENVIRONMENT='web,node'",
+	"build:js": "cp src/index.js dist/index.js",
+	"prepublishOnly": "npm run build"
+	},
+	
+	"scripts": {
+		"clean": "rm -rf dist/*.js",
+		"build": "npm run clean && npm run build:node && npm run build:browser && npm run build:wrappers",
+		"build:node": "emcc -O3 --bind -o dist/voro_node.js src/voro_wrapper.cpp voro++/src/cell.cc voro++/src/common.cc voro++/src/container.cc voro++/src/c_loops.cc voro++/src/unitcell.cc voro++/src/v_base.cc voro++/src/v_compute.cc voro++/src/wall.cc -I./voro++/src -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='createVoroModule' -s ALLOW_MEMORY_GROWTH=1 -s ENVIRONMENT='node'",
+		"build:browser": "emcc -O3 --bind -o dist/voro_browser.js src/voro_wrapper.cpp voro++/src/cell.cc voro++/src/common.cc voro++/src/container.cc voro++/src/c_loops.cc voro++/src/unitcell.cc voro++/src/v_base.cc voro++/src/v_compute.cc voro++/src/wall.cc -I./voro++/src -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='createVoroModule' -s ALLOW_MEMORY_GROWTH=1 -s ENVIRONMENT='web'",
+		"build:wrappers": "cat src/index.js | sed 's/REPLACE_ME/voro_node/' > dist/index.js && cat src/index.js | sed 's/REPLACE_ME/voro_browser/' > dist/browser.js",
+		"prepublishOnly": "npm run build"
+	},
+
+	"files": [
+		"dist/",
+		"README.md"
+	],
+	"author": "Maikel de Vries <info@mdt.re>",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/mdt-re/voro-js.git"
+	},
+	"keywords": [
+		"voronoi",
+		"webassembly",
+		"wasm",
+		"emscripten",
+		"geometry"
+	]
+}
