@@ -22,6 +22,7 @@ struct Point3D
 	double z;
 };
 
+
 // helper structure to represent a Voronoi cell's vertices for js
 struct VoronoiCell
 {
@@ -34,6 +35,72 @@ struct VoronoiCell
 	std::vector<int> neighbors;
 };
 
+
+/** \brief A C++ proxy class that wraps a JavaScript wall object.
+ *
+ * This class inherits from voro::wall, allowing it to be added to a Voro++
+ * container. It holds a reference to a JavaScript object (via emscripten::val)
+ * and forwards the essential wall method calls to it.
+ */
+class WallJS : public voro::wall 
+{
+public:
+	// The constructor accepts the JavaScript object from the bindings.
+	WallJS(emscripten::val js_obj) : wall(), wall_js_object(js_obj) {}
+
+	/** \brief Tests a point by calling the JavaScript implementation.
+	 * \param[in] (x,y,z) the vector to test.
+	 * \return true if the point is inside, false otherwise. */
+	bool point_inside(double x, double y, double z)
+	{
+		// Forward the call to the 'point_inside' method on the JS object.
+		return wall_js_object.call<bool>("point_inside", x, y, z);
+	}
+
+	/** \brief Cuts a voronoicell by the JavaScript wall. This overrides the
+	 * pure virtual function in the base voro::wall class. */
+	bool cut_cell(voro::voronoicell &c, double x, double y, double z)
+	{
+		return cut_cell_internal(c, x, y, z);
+	}
+
+	/** \brief Cuts a voronoicell_neighbor by the JavaScript wall. This also
+	 * overrides a pure virtual function in the base voro::wall class. */
+	bool cut_cell(voro::voronoicell_neighbor &c, double x, double y, double z)
+	{
+		return cut_cell_internal(c, x, y, z);
+	}
+
+private:
+	// The JavaScript object that implements the wall logic.
+	emscripten::val wall_js_object;
+	
+	 /** \brief A helper function to contain the cutting logic, callable by both
+	 * cut_cell implementations to avoid code duplication. */
+	template<class v_cell>
+	bool cut_cell_internal(v_cell &c, double x, double y, double z)
+	{
+		// Forward the call to the 'cut_cell' method on the JS object.
+		emscripten::val plane_params = wall_js_object.call<emscripten::val>("cut_cell", x, y, z);
+
+		// Check if the JS function returned a valid object indicating a cut.
+		if (!plane_params.isUndefined() && !plane_params.isNull() && plane_params["cut"].as<bool>())
+		{
+			// Cut the cell using the plane data returned from JavaScript.
+			c.plane(
+				plane_params["nx"].as<double>(),
+				plane_params["ny"].as<double>(),
+				plane_params["nz"].as<double>(),
+				plane_params["d"].as<double>()
+			);
+			return true;
+		}
+		return false;
+	}
+};
+
+
+// class for the Voronoi context in which all calculations take place
 class VoronoiContext3D
 {
 public:
@@ -59,7 +126,44 @@ public:
 		for (size_t i = 0; i < ids.size(); ++i)
 			con.put(ids[i], x_coords[i], y_coords[i], z_coords[i]);
 	}
-
+	
+	// adds a single plane wall to the container with normal vector (x, y, z) and displacement d
+	void addWallPlane(double x, double y, double z, double d, int id=-99)
+	{
+		voro::wall_plane plane(x, y, z, d, id);
+		con.add_wall(plane);
+	}
+	
+	// adds a spherical wall to the container with center (x, y, z) and radius r
+	void addWallSphere(double x, double y, double z, double r, int id=-99)
+	{
+		voro::wall_sphere sphere(x, y, z, r, id);
+		con.add_wall(sphere);
+	}
+	
+	// adds an open cylindrical wall to the container with axis point (ax, ay, az) axis vector (vx, vy, vz) and radius r
+	void addWallCylinder(double ax, double ay, double az, double vx, double vy, double vz, double r, int id=-99)
+	{
+		voro::wall_cylinder cylinder(ax, ay, az, vx, vy, vz, r, id);
+		con.add_wall(cylinder);
+	}
+	
+	// adds a conal wall to the container with apex point (ax, ay, az) axis vector (vx, vy, vz) and angle a (in radians)
+	void addWallCone(double ax, double ay, double az, double vx, double vy, double vz, double a, int id=-99)
+	{
+		voro::wall_cone cone(ax, ay, az, vx, vy, vz, a, id);
+		con.add_wall(cone);
+	}
+	
+	void addWallJS(emscripten::val js_wall)
+	{
+		// Create the cpp proxy wall from the given JS implementation. Create an
+		// instance on the heap to control its lifetime and avoid null pointer exceptions.
+		WallJS* cpp_wall_proxy = new WallJS(js_wall);
+		// Add the proxy wall to the container
+		con.add_wall(*cpp_wall_proxy);
+	}
+	
 	// computes and returns all Voronoi cells in the container
 	std::vector<VoronoiCell> getAllCells()
 	{
@@ -81,57 +185,6 @@ public:
 					
 					// add this cell to the vector of cells
 					cells.push_back(cell);
-					
-					//~ // get cell position by call by reference
-					//~ cla.pos(current_cell.position.x, current_cell.position.y, current_cell.position.z);
-					
-					//~ // get id and volume
-					//~ current_cell.id = cla.pid();
-					//~ current_cell.volume = c.volume();
-					
-					//~ // get cell vertices, these are updated by call by refernce
-					//~ std::vector<double> v;
-					//~ c.vertices(current_cell.position.x, current_cell.position.y, current_cell.position.z, v);
-					//~ // then convert the vertices from [x1, y1, z1, ...] to ????????????
-					//~ for (size_t i = 0; i < v.size(); i += 3)
-						//~ current_cell.vertices.push_back({v[i], v[i+1], v[i+2]});
-						
-					//~ // get cell faces and orders, these are updated by call by reference
-					//~ std::vector<int> face_vertices, face_orders;
-					//~ c.face_vertices(face_vertices);
-					//~ c.face_orders(face_orders);
-					
-					//~ // then convert these two vectors to a vector of vector of ints where
-					//~ // each vector contains the vertex numbers corresponding to a face
-					//~ // the order contains the number of vertices for the indexed face
-					//~ int fv_offset = 0;
-					//~ for (int fv_cnt : face_orders)
-					//~ {
-						//~ std::vector<int> current_face;
-						//~ current_face.reserve(fv_cnt);
-						//~ for (int j = 0; j < fv_cnt; ++j)
-							//~ current_face.push_back(face_vertices[fv_offset + j]);
-						//~ current_cell.faces.push_back(current_face);
-						//~ fv_offset += fv_cnt;
-					//~ }
-					
-					//~ // also extract the edges from these
-					//~ std::set<std::vector<int>> unique_edges;
-					//~ for (const auto& face : current_cell.faces) {
-						//~ for (size_t j = 0; j < face.size(); ++j) {
-							//~ int v1 = face[j];
-							//~ int v2 = face[(j + 1) % face.size()];
-							//~ if (v1 > v2) std::swap(v1, v2);
-							//~ unique_edges.insert({v1, v2});
-						//~ }
-					//~ }
-					//~ // the set removes the duplicates, now convert to vector of vector of ints
-					//~ for (const auto& edge : unique_edges)
-						//~ current_cell.edges.push_back(edge);
-					
-					//~ // get cell neighbors, these are updated by call by reference
-					//~ c.neighbors(current_cell.neighbors);
-					
 				}
 			}
 			while (cla.inc());
@@ -264,7 +317,8 @@ private:
 
 
 // binding code using embind
-EMSCRIPTEN_BINDINGS(voro_module_3d) {
+EMSCRIPTEN_BINDINGS(voro_module_3d)
+{
 	emscripten::value_object<Point3D>("Point3D")
 		.field("x", &Point3D::x)
 		.field("y", &Point3D::y)
@@ -289,6 +343,11 @@ EMSCRIPTEN_BINDINGS(voro_module_3d) {
 		.constructor<double, double, double, double, double, double, bool, bool, bool>()
 		.function("addPoint", &VoronoiContext3D::addPoint)
 		.function("addPoints", &VoronoiContext3D::addPoints)
+		.function("addWallPlane", &VoronoiContext3D::addWallPlane)
+		.function("addWallSphere", &VoronoiContext3D::addWallSphere)
+		.function("addWallCylinder", &VoronoiContext3D::addWallCylinder)
+		.function("addWallCone", &VoronoiContext3D::addWallCone)
+		.function("addWallJS", &VoronoiContext3D::addWallJS)
 		.function("getAllCells", &VoronoiContext3D::getAllCells)
 		.function("getCellById", &VoronoiContext3D::getCellById)
 		.function("relaxVoronoi", &VoronoiContext3D::relaxVoronoi)
