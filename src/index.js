@@ -11,17 +11,18 @@ let voroModule = null;
  */
 export async function initializeVoro()
 {
-	// The API is already loaded
+	// The API is already loaded.
 	if (voroModule)
 		return voroModule;
 	
-	// Create the module instance
+	// Create the module instance.
 	const Module = await createVoroModule();
 	
-	// The API is now ready to be used
+	// The API is now ready to be used.
 	voroModule = {
+		// This is where classes/functions are exposed.
 		VoronoiContext3D: Module.VoronoiContext3D,
-		// You could expose other bound classes/functions here
+		VoronoiCell3D: Module.VoronoiCell3D,
 	};
 	return voroModule;
 }
