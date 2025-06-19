@@ -23,6 +23,8 @@ export async function initializeVoro()
 		// This is where classes/functions are exposed.
 		VoronoiContext3D: Module.VoronoiContext3D,
 		VoronoiCell3D: Module.VoronoiCell3D,
+        VectorInt: Module.VectorInt,
+        VectorDouble: Module.VectorDouble,
 	};
 	return voroModule;
 }

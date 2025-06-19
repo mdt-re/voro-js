@@ -114,9 +114,9 @@ class VoronoiContext3D
 public:
     // Constructor: initializes a 3D Voro++ container
     // Parameters define the bounding box and periodicity
-    VoronoiContext3D(double minX, double maxX, double minY, double maxY, double minZ, double maxZ, bool periodicX, bool periodicY, bool periodicZ)
+    VoronoiContext3D(double x_min, double x_max, double y_min, double y_max, double z_min, double z_max, int n_x = 8, int n_y = 8, int n_z = 8)
         // Initialize with a coarse 1x1x1 grid; Voro++ will refine it as needed.
-        : con(minX, maxX, minY, maxY, minZ, maxZ, 6, 6, 6, periodicX, periodicY, periodicZ, 8) {}
+        : con(x_min, x_max, y_min, y_max, z_min, z_max, n_x, n_y, n_z, false, false, false, 8) {}
 
 	// adds a single 3d point to the container
 	void addPoint(int id, double x, double y, double z)
@@ -311,7 +311,7 @@ private:
 			for (size_t j = 0; j < face.size(); ++j)
 			{
 				int v1 = face[j];
-				int v2 = face[(j + 1) % face.size()];				
+				int v2 = face[(j + 1) % face.size()];
 				// Sort to ensure uniqueness, e.g. (1, 2) is the same as (2, 1).
 				if (v1 > v2)
 					std::swap(v1, v2);
@@ -361,10 +361,10 @@ public:
 	{
 		return cell.plane(x, y, z);
 	}
-	//~ bool cutPlane(double x, double y, double z, double rsq)
-	//~ {
-		//~ return cell.plane(x, y, z, rsq);
-	//~ }
+	bool cutPlaneR(double x, double y, double z, double rsq)
+	{
+		return cell.plane(x, y, z, rsq);
+	}
 	
 	/** \brief Gets the Voronoi cell.
 	 * Returns the Voronoi cell prepared for Javascript interpretation.
@@ -373,9 +373,10 @@ public:
 	VoronoiCell getCell()
 	{
 		VoronoiCell voronoi_cell;
-		// Assume cell position equals (0, 0, 0).
-		voronoi_cell.position = {0, 0, 0};
 		
+		// Assume cell position equals (0, 0, 0) and id defaults to 0.
+		voronoi_cell.position = {0, 0, 0};
+		voronoi_cell.id = 0;
 		voronoi_cell.volume = cell.volume();
 		
 		// Get cell vertices, these are updated by call by reference.
@@ -384,6 +385,42 @@ public:
 		// Then convert the vertices from [x1, y1, z1, ...] to vector<Point3D>.
 		for (size_t i = 0; i < v.size(); i += 3)
 			voronoi_cell.vertices.push_back({v[i], v[i+1], v[i+2]});
+			
+		// get cell faces and orders, these are updated by call by reference
+		std::vector<int> face_vertices, face_orders;
+		cell.face_vertices(face_vertices);
+		cell.face_orders(face_orders);
+		
+		// then convert these two vectors to a vector of vector of ints where
+		// each vector contains the vertex numbers corresponding to a face
+		// the order contains the number of vertices for the indexed face
+		int fv_offset = 0;
+		for (int fv_cnt : face_orders)
+		{
+			std::vector<int> current_face;
+			current_face.reserve(fv_cnt);
+			for (int j = 0; j < fv_cnt; ++j)
+				current_face.push_back(face_vertices[fv_offset + j]);
+			voronoi_cell.faces.push_back(current_face);
+			fv_offset += fv_cnt;
+		}
+		
+		// Extract unique edges from the face data.
+		std::set<std::vector<int>> unique_edges;
+		for (const auto& face : voronoi_cell.faces)
+		{
+			for (size_t j = 0; j < face.size(); ++j)
+			{
+				int v1 = face[j];
+				int v2 = face[(j + 1) % face.size()];
+				// Sort to ensure uniqueness, e.g. (1, 2) is the same as (2, 1).
+				if (v1 > v2)
+					std::swap(v1, v2);
+				unique_edges.insert({v1, v2});
+			}
+		}
+		// Convert the unique edges set back to a vector<vector<int>>.
+		voronoi_cell.edges.assign(unique_edges.begin(), unique_edges.end());
 		
 		return voronoi_cell;
 	}
@@ -438,5 +475,6 @@ EMSCRIPTEN_BINDINGS(voro_module_3d)
 		.constructor<>()
 		.function("initBox", &VoronoiCell3D::initBox)
 		.function("cutPlane", &VoronoiCell3D::cutPlane)
+		.function("cutPlaneR", &VoronoiCell3D::cutPlaneR)
 		.function("getCell", &VoronoiCell3D::getCell);
 }
