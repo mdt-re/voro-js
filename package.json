@@ -7,7 +7,7 @@
 	"browser": "dist/browser.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
-		"clean": "rm -rf dist/*.js",
+		"clean": "rm -rf dist/*.js && rm -rf dist/*.wasm",
 		"build": "npm run clean && npm run build:node && npm run build:browser && npm run build:wrappers",
 		"build:node": "emcc -O3 --bind -o dist/voro_node.js src/voro_wrapper.cpp voro++/src/cell.cc voro++/src/common.cc voro++/src/container.cc voro++/src/c_loops.cc voro++/src/unitcell.cc voro++/src/v_base.cc voro++/src/v_compute.cc voro++/src/wall.cc -I./voro++/src -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='createVoroModule' -s ALLOW_MEMORY_GROWTH=1 -s ENVIRONMENT='node'",
 		"build:browser": "emcc -O3 --bind -o dist/voro_browser.js src/voro_wrapper.cpp voro++/src/cell.cc voro++/src/common.cc voro++/src/container.cc voro++/src/c_loops.cc voro++/src/unitcell.cc voro++/src/v_base.cc voro++/src/v_compute.cc voro++/src/wall.cc -I./voro++/src -s WASM=1 -s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORT_NAME='createVoroModule' -s ALLOW_MEMORY_GROWTH=1 -s ENVIRONMENT='web'",
@@ -15,7 +15,9 @@
 		"prepublishOnly": "npm run build",
 		
 		"compile": "emcc -Isrc src/voro_wrapper.cpp ../voro++/src/voro++.cc -o voro_module.js -s MODULARIZE=1 -s EXPORT_NAME='createVoroModule' -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]' --bind -O3",
-		"test": "mocha test/test.js",
+		"test": "npm run test:context && npm run test:cell",
+		"test:context": "mocha test/test_context3d.js",
+		"test:cell": "mocha test/test_cell3d.js",
 		"test:verbose": "mocha --reporter spec test/test.js"
 	},
 	"files": [

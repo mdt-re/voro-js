@@ -23,7 +23,7 @@ struct Point3D
 	double z;
 };
 
-/** \brief Helper structure to represent a Voronoi cell's vertices for JavaScript.
+/** \brief Helper structure to represent a Voronoi cell's properties for JavaScript.
  */
 struct VoronoiCell
 {
@@ -284,24 +284,25 @@ private:
 		// Then convert the vertices from [x1, y1, z1, ...] to vector<Point3D>.
 		for (size_t i = 0; i < v.size(); i += 3)
 			cell.vertices.push_back({v[i], v[i+1], v[i+2]});
-			
-		// get cell faces and orders, these are updated by call by reference
+		
+		// Get cell faces and orders, these are updated by call by reference.
 		std::vector<int> face_vertices, face_orders;
 		c.face_vertices(face_vertices);
 		c.face_orders(face_orders);
 		
-		// then convert these two vectors to a vector of vector of ints where
-		// each vector contains the vertex numbers corresponding to a face
-		// the order contains the number of vertices for the indexed face
+		// Then convert these two vectors to a vector of vector of ints where
+		// each vector contains the vertex numbers corresponding to a face.
+		// The order contains the number of vertices for the indexed face.
 		int fv_offset = 0;
 		for (int fv_cnt : face_orders)
 		{
 			std::vector<int> current_face;
 			current_face.reserve(fv_cnt);
-			for (int j = 0; j < fv_cnt; ++j)
+			// The structure of cell.face_vertices is [f1#, f1_v1, f1v2, ... fn#, fn_v1, ...]
+			for (int j = 1; j <= fv_cnt; ++j)
 				current_face.push_back(face_vertices[fv_offset + j]);
 			cell.faces.push_back(current_face);
-			fv_offset += fv_cnt;
+			fv_offset += (fv_cnt + 1);
 		}
 		
 		// Extract unique edges from the face data.
@@ -386,23 +387,24 @@ public:
 		for (size_t i = 0; i < v.size(); i += 3)
 			voronoi_cell.vertices.push_back({v[i], v[i+1], v[i+2]});
 			
-		// get cell faces and orders, these are updated by call by reference
+		// Get cell faces and orders, these are updated by call by reference.
 		std::vector<int> face_vertices, face_orders;
 		cell.face_vertices(face_vertices);
 		cell.face_orders(face_orders);
 		
-		// then convert these two vectors to a vector of vector of ints where
-		// each vector contains the vertex numbers corresponding to a face
-		// the order contains the number of vertices for the indexed face
+		// Then convert these two vectors to a vector of vector of ints where
+		// each vector contains the vertex numbers corresponding to a face.
+		// The order contains the number of vertices for the indexed face.
 		int fv_offset = 0;
 		for (int fv_cnt : face_orders)
 		{
 			std::vector<int> current_face;
 			current_face.reserve(fv_cnt);
-			for (int j = 0; j < fv_cnt; ++j)
+			// The structure of cell.face_vertices is [f1#, f1_v1, f1v2, ... fn#, fn_v1, ...]
+			for (int j = 1; j <= fv_cnt; ++j)
 				current_face.push_back(face_vertices[fv_offset + j]);
 			voronoi_cell.faces.push_back(current_face);
-			fv_offset += fv_cnt;
+			fv_offset += (fv_cnt + 1);
 		}
 		
 		// Extract unique edges from the face data.
