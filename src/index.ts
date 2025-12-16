@@ -2,12 +2,51 @@
 // @ts-ignore: This file is generated during the build process.
 import createVoroModule from './REPLACE_ME.js';
 
+export interface EmscriptenObject {
+	delete(): void;
+}
+
+export interface VectorInt extends EmscriptenObject {
+	push_back(value: number): void;
+	size(): number;
+	get(index: number): number;
+	set(index: number, value: number): void;
+}
+
+export interface VectorDouble extends EmscriptenObject {
+	push_back(value: number): void;
+	size(): number;
+	get(index: number): number;
+	set(index: number, value: number): void;
+}
+
+export interface VoronoiCell3D extends EmscriptenObject {
+	initBox(xmin: number, xmax: number, ymin: number, ymax: number, zmin: number, zmax: number): void;
+	cutPlane(x: number, y: number, z: number): boolean;
+	cutPlaneR(x: number, y: number, z: number, rsq: number): boolean;
+	getCell(): any;
+}
+
+export interface VoronoiContext3D extends EmscriptenObject {
+	addPoint(id: number, x: number, y: number, z: number): void;
+	addPoints(ids: VectorInt, x: VectorDouble, y: VectorDouble, z: VectorDouble): void;
+	addWallPlane(x: number, y: number, z: number, d: number, id?: number): void;
+	addWallSphere(x: number, y: number, z: number, r: number, id?: number): void;
+	addWallCylinder(ax: number, ay: number, az: number, vx: number, vy: number, vz: number, r: number, id?: number): void;
+	addWallCone(ax: number, ay: number, az: number, vx: number, vy: number, vz: number, a: number, id?: number): void;
+	addWallJS(wall: any): void;
+	getAllCells(): any;
+	getCellById(id: number): VoronoiCell3D;
+	relaxVoronoi(): any;
+	clear(): void;
+}
+
 // Define the shape of the Voro++ API.
 export interface VoroAPI {
-	VoronoiContext3D: any;
-	VoronoiCell3D: any;
-	VectorInt: any;
-	VectorDouble: any;
+	VoronoiContext3D: new (...args: any[]) => VoronoiContext3D;
+	VoronoiCell3D: new (...args: any[]) => VoronoiCell3D;
+	VectorInt: new () => VectorInt;
+	VectorDouble: new () => VectorDouble;
 }
 
 // Store the module instance.

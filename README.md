@@ -22,3 +22,8 @@ Full API documentation, advanced usage, and a guide on memory management can be 
 ## Examples
 
 ## Tests
+
+Testing is done using Mocha and Chai to verify the functionality of the Voro++ WebAssembly wrapper, in particular the elements `VoronoiContext3D` and `VoronoiCell3D`. To run the tests, execute the following command in the project directory:
+```bash
+npm test
+```
