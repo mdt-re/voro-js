@@ -126,61 +126,7 @@
             }
 
             // Compute all Voronoi cells
-            const emscriptenCells = context.getAllCells();
-            
-            // --- 3. Convert Emscripten objects to JS and clean up memory ---
-            // These helper functions are crucial for converting the data returned
-            // from WebAssembly into standard JavaScript arrays and for correctly
-            // freeing the C++ memory allocated by Emscripten.
-
-            function convertPointsToJsArray(emscriptenPoints) {
-                const jsPoints = [];
-                if (!emscriptenPoints) return jsPoints;
-                for (let i = 0; i < emscriptenPoints.size(); i++) {
-                    jsPoints.push(emscriptenPoints.get(i));
-                }
-                emscriptenPoints.delete();
-                return jsPoints;
-            }
-
-            function convertIntVectorToJsArray(emscriptenIntVector) {
-                const jsArray = [];
-                if (!emscriptenIntVector) return jsArray;
-                for (let i = 0; i < emscriptenIntVector.size(); i++) {
-                    jsArray.push(emscriptenIntVector.get(i));
-                }
-                emscriptenIntVector.delete();
-                return jsArray;
-            }
-
-            function convertVectorVectorIntToJsArray(emscriptenVectorVectorInt) {
-                const jsArray = [];
-                if (!emscriptenVectorVectorInt) return jsArray;
-                for (let i = 0; i < emscriptenVectorVectorInt.size(); i++) {
-                    const nestedEmscriptenIntVector = emscriptenVectorVectorInt.get(i);
-                    jsArray.push(convertIntVectorToJsArray(nestedEmscriptenIntVector));
-                }
-                emscriptenVectorVectorInt.delete();
-                return jsArray;
-            }
-
-            function convertCellsToJsArray(emscriptenCells) {
-                const jsCells = [];
-                if (!emscriptenCells) return jsCells;
-                for (let i = 0; i < emscriptenCells.size(); i++) {
-                    const cell = emscriptenCells.get(i);
-                    cell.vertices = convertPointsToJsArray(cell.vertices);
-                    cell.edges = convertVectorVectorIntToJsArray(cell.edges);
-                    cell.faces = convertVectorVectorIntToJsArray(cell.faces);
-                    cell.neighbors = convertIntVectorToJsArray(cell.neighbors);
-                    jsCells.push(cell);
-                    //cell.delete();
-                }
-                emscriptenCells.delete();
-                return jsCells;
-            }
-
-            const cells = convertCellsToJsArray(emscriptenCells);
+            const cells = context.getCells();
 
             // Clean up the context now that we have the data
             context.clear();

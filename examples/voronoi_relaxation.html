@@ -49,53 +49,6 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import GUI from 'lil-gui';
 
-        // --- Voro++ Helper Functions ---
-        function convertPointsToJsArray(emscriptenPoints) {
-            const jsPoints = [];
-            if (!emscriptenPoints) return jsPoints;
-            for (let i = 0; i < emscriptenPoints.size(); i++) {
-                jsPoints.push(emscriptenPoints.get(i));
-            }
-            emscriptenPoints.delete();
-            return jsPoints;
-        }
-
-        function convertIntVectorToJsArray(emscriptenIntVector) {
-            const jsArray = [];
-            if (!emscriptenIntVector) return jsArray;
-            for (let i = 0; i < emscriptenIntVector.size(); i++) {
-                jsArray.push(emscriptenIntVector.get(i));
-            }
-            emscriptenIntVector.delete();
-            return jsArray;
-        }
-
-        function convertVectorVectorIntToJsArray(emscriptenVectorVectorInt) {
-            const jsArray = [];
-            if (!emscriptenVectorVectorInt) return jsArray;
-            for (let i = 0; i < emscriptenVectorVectorInt.size(); i++) {
-                const nestedEmscriptenIntVector = emscriptenVectorVectorInt.get(i);
-                jsArray.push(convertIntVectorToJsArray(nestedEmscriptenIntVector));
-            }
-            emscriptenVectorVectorInt.delete();
-            return jsArray;
-        }
-
-        function convertCellsToJsArray(emscriptenCells) {
-            const jsCells = [];
-            if (!emscriptenCells) return jsCells;
-            for (let i = 0; i < emscriptenCells.size(); i++) {
-                const cell = emscriptenCells.get(i);
-                cell.vertices = convertPointsToJsArray(cell.vertices);
-                cell.edges = convertVectorVectorIntToJsArray(cell.edges);
-                cell.faces = convertVectorVectorIntToJsArray(cell.faces);
-                cell.neighbors = convertIntVectorToJsArray(cell.neighbors);
-                jsCells.push(cell);
-            }
-            emscriptenCells.delete();
-            return jsCells;
-        }
-
         // --- Centroid Calculation ---
         function computeCellCentroid(cell) {
             if (!cell.vertices || cell.vertices.length === 0) return null;
@@ -208,8 +161,8 @@
 
             // State
             const params = {
-                pointCount: 30,
-                stepInterval: 1.0,
+                pointCount: 40,
+                stepInterval: 0.25,
                 autoRun: true,
                 regenerate: () => resetSimulation()
             };
@@ -220,8 +173,8 @@
 
             // GUI
             const gui = new GUI();
-            gui.add(params, 'pointCount', 10, 4000, 1).name('Point Count').onFinishChange(resetSimulation);
-            gui.add(params, 'stepInterval', 0.1, 5.0).name('Step Interval (s)');
+            gui.add(params, 'pointCount', 8, 1600, 1).name('Point Count').onFinishChange(resetSimulation);
+            gui.add(params, 'stepInterval', 0.05, 2.0, 0.05).name('Step Interval (s)');
             gui.add(params, 'autoRun').name('Auto Run');
             gui.add(params, 'regenerate').name('Regenerate');
 
@@ -254,8 +207,7 @@
                 });
 
                 // 3. Compute Cells
-                const emscriptenCells = context.getAllCells();
-                const cells = convertCellsToJsArray(emscriptenCells);
+                const cells = context.getCells();
 
                 // 4. Compute Centroids & Update Points
                 const newPoints = [];

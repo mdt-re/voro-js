@@ -24,6 +24,7 @@ export interface VoronoiCell3D extends EmscriptenObject {
 	initBox(xmin: number, xmax: number, ymin: number, ymax: number, zmin: number, zmax: number): void;
 	cutPlane(x: number, y: number, z: number): boolean;
 	cutPlaneR(x: number, y: number, z: number, rsq: number): boolean;
+	getCellRaw(): any;
 	getCell(): any;
 }
 
@@ -35,7 +36,8 @@ export interface VoronoiContext3D extends EmscriptenObject {
 	addWallCylinder(ax: number, ay: number, az: number, vx: number, vy: number, vz: number, r: number, id?: number): void;
 	addWallCone(ax: number, ay: number, az: number, vx: number, vy: number, vz: number, a: number, id?: number): void;
 	addWallJS(wall: any): void;
-	getAllCells(): any;
+	getCellsRaw(): any;
+	getCells(): any[];
 	getCellById(id: number): VoronoiCell3D;
 	relaxVoronoi(): any;
 	clear(): void;
@@ -65,7 +67,7 @@ export async function initializeVoro(): Promise<VoroAPI>
 	
 	// Create the module instance.
 	const Module = await createVoroModule();
-	
+
 	// The API is now ready to be used.
 	voroModule = {
 		// This is where classes/functions are exposed.

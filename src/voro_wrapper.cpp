@@ -37,6 +37,48 @@ struct VoronoiCell
 };
 
 
+/** \brief Helper functions for JavaScript conversion.
+ */
+emscripten::val pointToJS(const Point3D& p) {
+	emscripten::val obj = emscripten::val::object();
+	obj.set("x", p.x);
+	obj.set("y", p.y);
+	obj.set("z", p.z);
+	return obj;
+}
+
+emscripten::val pointsToJSArray(const std::vector<Point3D>& v) {
+	emscripten::val arr = emscripten::val::array();
+	for (const auto& p : v) arr.call<void>("push", pointToJS(p));
+	return arr;
+}
+
+emscripten::val intsToJSArray(const std::vector<int>& v) {
+	emscripten::val arr = emscripten::val::array();
+	for (int i : v) arr.call<void>("push", i);
+	return arr;
+}
+
+emscripten::val facesToJSArray(const std::vector<std::vector<int>>& v) {
+	emscripten::val arr = emscripten::val::array();
+	for (const auto& face : v) arr.call<void>("push", intsToJSArray(face));
+	return arr;
+}
+
+emscripten::val cellToJS(const VoronoiCell& c) {
+	emscripten::val obj = emscripten::val::object();
+	obj.set("id", c.id);
+	obj.set("position", pointToJS(c.position));
+	obj.set("volume", c.volume);
+	obj.set("vertices", pointsToJSArray(c.vertices));
+	obj.set("edges", facesToJSArray(c.edges));
+	obj.set("faces", facesToJSArray(c.faces));
+	obj.set("neighbors", intsToJSArray(c.neighbors));
+	return obj;
+}
+
+
+
 /** \brief A C++ proxy class that wraps a JavaScript wall object.
  *
  * This class inherits from voro::wall, allowing it to be added to a Voro++
@@ -173,7 +215,7 @@ public:
 	}
 	
 	// computes and returns all Voronoi cells in the container
-	std::vector<VoronoiCell> getAllCells()
+	std::vector<VoronoiCell> getCellsRaw()
 	{
 		// init js cells, loop over all cells using the voro++ iterator
 		std::vector<VoronoiCell> cells;
@@ -200,6 +242,17 @@ public:
 		return cells;
 	}
 	
+	// computes and returns all Voronoi cells as JS objects
+	emscripten::val getCells()
+	{
+		std::vector<VoronoiCell> cells = getCellsRaw();
+		emscripten::val js_cells = emscripten::val::array();
+		for (const auto& c : cells) {
+			js_cells.call<void>("push", cellToJS(c));
+		}
+		return js_cells;
+	}
+
 	// computes and returns a specific Voronoi cell by its ID
 	VoronoiCell getCellById(int id)
 	{
@@ -371,7 +424,7 @@ public:
 	 * Returns the Voronoi cell prepared for Javascript interpretation.
 	 * \return The Voronoi cell in VoronoiCell format.
 	 */
-	VoronoiCell getCell()
+	VoronoiCell getCellRaw()
 	{
 		VoronoiCell voronoi_cell;
 		
@@ -427,6 +480,12 @@ public:
 		return voronoi_cell;
 	}
 
+	// Returns the Voronoi cell as a JS object
+	emscripten::val getCell()
+	{
+		return cellToJS(getCellRaw());
+	}
+
 private:
 	// The cell is stored in this binding class.
 	voro::voronoicell cell;
@@ -460,7 +519,7 @@ EMSCRIPTEN_BINDINGS(voro_module_3d)
 	emscripten::register_vector<std::vector<int>>("VectorVectorInt");
 
 	emscripten::class_<VoronoiContext3D>("VoronoiContext3D")
-		.constructor<double, double, double, double, double, double, bool, bool, bool>()
+		.constructor<double, double, double, double, double, double, int, int, int>()
 		.function("addPoint", &VoronoiContext3D::addPoint)
 		.function("addPoints", &VoronoiContext3D::addPoints)
 		.function("addWallPlane", &VoronoiContext3D::addWallPlane)
@@ -468,7 +527,8 @@ EMSCRIPTEN_BINDINGS(voro_module_3d)
 		.function("addWallCylinder", &VoronoiContext3D::addWallCylinder)
 		.function("addWallCone", &VoronoiContext3D::addWallCone)
 		.function("addWallJS", &VoronoiContext3D::addWallJS)
-		.function("getAllCells", &VoronoiContext3D::getAllCells)
+		.function("getCellsRaw", &VoronoiContext3D::getCellsRaw)
+		.function("getCells", &VoronoiContext3D::getCells)
 		.function("getCellById", &VoronoiContext3D::getCellById)
 		.function("relaxVoronoi", &VoronoiContext3D::relaxVoronoi)
 		.function("clear", &VoronoiContext3D::clear);
@@ -478,5 +538,6 @@ EMSCRIPTEN_BINDINGS(voro_module_3d)
 		.function("initBox", &VoronoiCell3D::initBox)
 		.function("cutPlane", &VoronoiCell3D::cutPlane)
 		.function("cutPlaneR", &VoronoiCell3D::cutPlaneR)
+		.function("getCellRaw", &VoronoiCell3D::getCellRaw)
 		.function("getCell", &VoronoiCell3D::getCell);
 }
