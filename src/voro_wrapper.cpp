@@ -254,7 +254,7 @@ public:
 	}
 
 	// computes and returns a specific Voronoi cell by its ID
-	VoronoiCell getCellById(int id)
+	VoronoiCell getCellRawById(int id)
 	{
 		VoronoiCell cell;
 		voro::c_loop_all cla(con);
@@ -279,6 +279,12 @@ public:
 		}
 		// handle case where cell ID is not found by just returning empty cell
 		return cell;
+	}
+	
+	// computes and returns a specific Voronoi cell by its ID as a JS object
+	emscripten::val getCellById(int id)
+	{
+		return cellToJS(getCellRawById(id));
 	}
 	
 	// returns a set of points that correspond to a single step in Voronoi relaxation
@@ -539,6 +545,7 @@ EMSCRIPTEN_BINDINGS(voro_module_3d)
 		.function("addWallJS", &VoronoiContext3D::addWallJS)
 		.function("getCellsRaw", &VoronoiContext3D::getCellsRaw)
 		.function("getCells", &VoronoiContext3D::getCells)
+		.function("getCellRawById", &VoronoiContext3D::getCellRawById)
 		.function("getCellById", &VoronoiContext3D::getCellById)
 		.function("relaxVoronoi", &VoronoiContext3D::relaxVoronoi)
 		.function("clear", &VoronoiContext3D::clear);
