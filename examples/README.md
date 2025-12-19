@@ -20,6 +20,18 @@
         <b>Voronoi Relaxation</b>
       </a>
     </td>
+    <td align="center">
+      <a href="https://mdt-re.github.io/voro-js/examples/curve_game.html">
+        <img src="assets/curve_game.png" width="250px" alt="Curve Game" /><br />
+        <b>Curve Game</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://mdt-re.github.io/voro-js/examples/performance_demo.html">
+        <img src="assets/voro_performance.png" width="250px" alt="Performance Demo" /><br />
+        <b>Performance Demo</b>
+      </a>
+    </td>
   </tr>
 </table>
 

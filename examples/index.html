@@ -8,45 +8,82 @@
         body { font-family: system-ui, -apple-system, sans-serif; max-width: 1200px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; background-color: #f4f4f9; color: #333; }
         h1 { text-align: center; margin-bottom: 2rem; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; }
-        .card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; transition: transform 0.2s; display: flex; flex-direction: column; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; transition: transform 0.2s; display: flex; flex-direction: column; position: relative; }
         .card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
-        .card-image { width: 100%; height: 200px; background-color: #ddd; object-fit: cover; }
-        .card-content { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
-        .card-title { margin: 0 0 0.5rem 0; font-size: 1.25rem; }
-        .card-title a { color: #0969da; text-decoration: none; }
-        .card-title a:hover { text-decoration: underline; }
-        .card-desc { font-size: 0.95rem; color: #666; margin-bottom: 1rem; flex-grow: 1; }
-        .card-link { display: inline-block; margin-top: auto; color: #0969da; font-weight: 600; text-decoration: none; }
-        .card-link:hover { text-decoration: underline; }
+        .card-image-container { position: relative; display: block; color: white; text-decoration: none; }
+        .card-image { width: 100%; height: 200px; background-color: #ddd; object-fit: cover; display: block; }
+        .card-title { position: absolute; bottom: 0; left: 0; right: 0; margin: 0; padding: 1rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); font-size: 1.25rem; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .card-content { padding: 1rem 4rem 1.5rem 1.5rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .card-desc { font-size: 0.95rem; color: #666; margin: 0; flex-grow: 1; }
+        .github-btn { position: absolute; bottom: 15px; right: 15px; width: 36px; height: 36px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: transform 0.2s; z-index: 10; color: #333; }
+        .github-btn:hover { transform: scale(1.1); color: #000; }
     </style>
 </head>
 <body>
     <h1>Voro-js Examples</h1>
     <div class="grid">
         <div class="card">
-            <img src="./assets/moving_cell.png" alt="Moving Cell" class="card-image">
+            <a href="moving_cell.html" class="card-image-container">
+                <img src="./assets/moving_cell.png" alt="Moving Cell" class="card-image">
+                <h2 class="card-title">Moving Cell</h2>
+            </a>
+            <a href="https://github.com/mdt-re/voro-js/blob/main/examples/moving_cell.html" class="github-btn" title="View Code" target="_blank" aria-label="View Code on GitHub">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
             <div class="card-content">
-                <h2 class="card-title"><a href="moving_cell.html">Moving Cell</a></h2>
                 <p class="card-desc">A single moving cell through a Voronoi tessellation.</p>
-                <a href="moving_cell.html" class="card-link">View Example &rarr;</a>
             </div>
         </div>
 
         <div class="card">
-            <img src="./assets/single_cell.png" alt="Single Cell" class="card-image">
+            <a href="single_cell.html" class="card-image-container">
+                <img src="./assets/single_cell.png" alt="Single Cell" class="card-image">
+                <h2 class="card-title">Single Cell</h2>
+            </a>
+            <a href="https://github.com/mdt-re/voro-js/blob/main/examples/single_cell.html" class="github-btn" title="View Code" target="_blank" aria-label="View Code on GitHub">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
             <div class="card-content">
-                <h2 class="card-title"><a href="single_cell.html">Single Cell</a></h2>
                 <p class="card-desc">A central cell (0,0,0) shaped by random neighbor plane cuts.</p>
-                <a href="single_cell.html" class="card-link">View Example &rarr;</a>
             </div>
         </div>
 
         <div class="card">
-            <img src="./assets/voronoi_relaxation.png" alt="Voronoi Relaxation" class="card-image">
+            <a href="voronoi_relaxation.html" class="card-image-container">
+                <img src="./assets/voronoi_relaxation.png" alt="Voronoi Relaxation" class="card-image">
+                <h2 class="card-title">Voronoi Relaxation</h2>
+            </a>
+            <a href="https://github.com/mdt-re/voro-js/blob/main/examples/voronoi_relaxation.html" class="github-btn" title="View Code" target="_blank" aria-label="View Code on GitHub">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
             <div class="card-content">
-                <h2 class="card-title"><a href="voronoi_relaxation.html">Voronoi Relaxation</a></h2>
                 <p class="card-desc">Demonstrates Lloyd's relaxation algorithm where cells move towards their centroids.</p>
-                <a href="voronoi_relaxation.html" class="card-link">View Example &rarr;</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <a href="curve_game.html" class="card-image-container">
+                <img src="./assets/curve_game.png" alt="Curve Game" class="card-image">
+                <h2 class="card-title">Curve Game</h2>
+            </a>
+            <a href="https://github.com/mdt-re/voro-js/blob/main/examples/curve_game.html" class="github-btn" title="View Code" target="_blank" aria-label="View Code on GitHub">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+            <div class="card-content">
+                <p class="card-desc">Guess the curve while riding inside a moving Voronoi cell.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <a href="performance_demo.html" class="card-image-container">
+                <img src="./assets/voro_performance.png" alt="Performance Demo" class="card-image">
+                <h2 class="card-title">Performance Demo</h2>
+            </a>
+            <a href="https://github.com/mdt-re/voro-js/blob/main/examples/performance_demo.html" class="github-btn" title="View Code" target="_blank" aria-label="View Code on GitHub">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+            <div class="card-content">
+                <p class="card-desc">Benchmark the library performance with large particle counts.</p>
             </div>
         </div>
 
