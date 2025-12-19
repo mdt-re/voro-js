@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voro-js Voronoi Relaxation (Lloyd's Algorithm)</title>
+    <title>Voro-js Moving Cell Example</title>
     <style>
         body { margin: 0; font-family: sans-serif; overflow: hidden; }
         canvas { display: block; }
@@ -31,7 +31,7 @@
     </style>
 </head>
 <body>
-    <div id="info">Voro-js Voronoi Relaxation (Lloyd's Algorithm)<br>Cells move towards their centroid<br><span style="font-size: 0.8em">(Press 'p' to save screenshot)</span></div>
+    <div id="info">Voro-js Moving Cell<br>One cell moves through static points<br><span style="font-size: 0.8em">(Press 'p' to save screenshot)</span></div>
     <div id="loading">Loading Voro++ Module...</div>
 
     <script type="importmap">
@@ -48,63 +48,6 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import GUI from 'lil-gui';
-
-        // --- Centroid Calculation ---
-        function computeCellCentroid(cell) {
-            if (!cell.vertices || cell.vertices.length === 0) return null;
-
-            let totalVolume = 0;
-            let weightedCentroid = { x: 0, y: 0, z: 0 };
-
-            // Compute geometric center of vertices to use as reference for tetrahedrons
-            // This improves numerical stability compared to using (0,0,0)
-            let cx = 0, cy = 0, cz = 0;
-            for(let v of cell.vertices) { cx += v.x; cy += v.y; cz += v.z; }
-            cx /= cell.vertices.length;
-            cy /= cell.vertices.length;
-            cz /= cell.vertices.length;
-
-            for (const face of cell.faces) {
-                // face is array of vertex indices. Triangulate face: (v0, vi, vi+1)
-                if (face.length < 3) continue;
-                const v0 = cell.vertices[face[0]];
-                for (let i = 1; i < face.length - 1; i++) {
-                    const v1 = cell.vertices[face[i]];
-                    const v2 = cell.vertices[face[i+1]];
-
-                    // Tetrahedron (center, v0, v1, v2)
-                    // Vectors from center
-                    const x1 = v0.x - cx, y1 = v0.y - cy, z1 = v0.z - cz;
-                    const x2 = v1.x - cx, y2 = v1.y - cy, z2 = v1.z - cz;
-                    const x3 = v2.x - cx, y3 = v2.y - cy, z3 = v2.z - cz;
-
-                    // Scalar triple product for volume * 6: (v1 . (v2 x v3))
-                    const det = x1 * (y2 * z3 - z2 * y3) +
-                                y1 * (z2 * x3 - x2 * z3) +
-                                z1 * (x2 * y3 - y2 * x3);
-                    
-                    const vol = Math.abs(det) / 6.0;
-                    
-                    // Centroid of tetrahedron
-                    const tx = (cx + v0.x + v1.x + v2.x) / 4.0;
-                    const ty = (cy + v0.y + v1.y + v2.y) / 4.0;
-                    const tz = (cz + v0.z + v1.z + v2.z) / 4.0;
-
-                    totalVolume += vol;
-                    weightedCentroid.x += vol * tx;
-                    weightedCentroid.y += vol * ty;
-                    weightedCentroid.z += vol * tz;
-                }
-            }
-
-            if (totalVolume <= 1e-9) return { x: cx, y: cy, z: cz };
-
-            return {
-                x: weightedCentroid.x / totalVolume,
-                y: weightedCentroid.y / totalVolume,
-                z: weightedCentroid.z / totalVolume
-            };
-        }
 
         // --- Main Application ---
         import('../dist/voro_browser.js').then(voroModule => {
@@ -162,140 +105,147 @@
             // State
             const params = {
                 pointCount: 40,
-                stepInterval: 0.25,
+                velocity: 0.1,
                 autoRun: true,
                 regenerate: () => resetSimulation()
             };
 
             let points = [];
-            let lastStepTime = 0;
-            let cellMesh = null;
+            let mover = { x: 5, y: 5, z: 5, vx: 0, vy: 0, vz: 0 };
+            let staticMesh = null;
+            let moverMesh = null;
+            let context = null;
 
             // GUI
             const gui = new GUI();
-            gui.add(params, 'pointCount', 8, 1600, 1).name('Point Count').onFinishChange(resetSimulation);
-            gui.add(params, 'stepInterval', 0.05, 2.0, 0.05).name('Step Interval (s)');
+            gui.add(params, 'pointCount', 8, 200, 1).name('Point Count').onFinishChange(resetSimulation);
+            gui.add(params, 'velocity', 0.01, 0.5).name('Velocity');
             gui.add(params, 'autoRun').name('Auto Run');
             gui.add(params, 'regenerate').name('Regenerate');
 
             function generatePoints() {
                 points = [];
-                for (let i = 0; i < params.pointCount; i++) {
+                // Generate static points
+                for (let i = 0; i < params.pointCount - 1; i++) {
                     points.push({
-                        id: i,
                         x: bounds.minX + Math.random() * (bounds.maxX - bounds.minX),
                         y: bounds.minY + Math.random() * (bounds.maxY - bounds.minY),
                         z: bounds.minZ + Math.random() * (bounds.maxZ - bounds.minZ)
                     });
                 }
+
+                // Initialize mover
+                mover.x = 5; mover.y = 5; mover.z = 5;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                mover.vx = Math.sin(phi) * Math.cos(theta);
+                mover.vy = Math.sin(phi) * Math.sin(theta);
+                mover.vz = Math.cos(phi);
             }
 
-            function performRelaxationStep() {
-                // 1. Create Context
-                // Heuristic for block size: roughly cube root of N
-                const n = Math.ceil(Math.pow(params.pointCount, 1/3));
-                const context = new Voro.VoronoiContext3D(
+            function initContext() {
+                if (context) context.delete();
+                context = new Voro.VoronoiContext3D(
                     bounds.minX, bounds.maxX,
                     bounds.minY, bounds.maxY,
                     bounds.minZ, bounds.maxZ,
-                    n, n, n
+                    1, 1, 1
                 );
 
-                // 2. Add Points
+                // Add static points once
                 points.forEach((p, i) => {
-                    context.addPoint(i, p.x, p.y, p.z);
+                    context.addPoint(i + 1, p.x, p.y, p.z);
                 });
+                
+                // Add mover initially
+                context.addPoint(0, mover.x, mover.y, mover.z);
+            }
+
+            function updateVoronoi() {
+                // 1. Update Mover Position (ID 0)
+                context.addPoint(0, mover.x, mover.y, mover.z);
 
                 // 3. Compute Cells
                 const cells = context.getCells();
 
-                // 4. Compute Centroids & Update Points
-                const newPoints = [];
-                const geometryData = {
-                    positions: [],
-                    colors: [],
-                    normals: []
-                };
-
-                const color = new THREE.Color();
+                // 4. Build Geometry
+                const staticPositions = [];
+                const moverPositions = [];
 
                 cells.forEach((cell, i) => {
-                    // Compute centroid
-                    const centroid = computeCellCentroid(cell);
-                    if (centroid) {
-                        newPoints.push({ id: i, x: centroid.x, y: centroid.y, z: centroid.z });
-                    } else {
-                        // Keep original if cell is degenerate (shouldn't happen in box)
-                        newPoints.push(points[i]);
-                    }
-
-                    // Build Geometry
-                    // Color based on position (stable visualization)
-                    const cx = centroid ? centroid.x : points[i].x;
-                    const cy = centroid ? centroid.y : points[i].y;
-                    const cz = centroid ? centroid.z : points[i].z;
-                    
-                    // HSL color based on position in box
-                    color.setHSL((cx / 10 + cy / 10 + cz / 10) / 3, 0.8, 0.5);
+                    const isMover = (i === 0);
+                    const targetArray = isMover ? moverPositions : staticPositions;
 
                     if (cell.vertices && cell.faces) {
                         cell.faces.forEach(face => {
                             if (face.length < 3) return;
-                            // Fan triangulation
                             const v0 = cell.vertices[face[0]];
                             for (let j = 1; j < face.length - 1; j++) {
                                 const v1 = cell.vertices[face[j]];
                                 const v2 = cell.vertices[face[j+1]];
 
-                                geometryData.positions.push(v0.x, v0.y, v0.z);
-                                geometryData.positions.push(v1.x, v1.y, v1.z);
-                                geometryData.positions.push(v2.x, v2.y, v2.z);
-
-                                geometryData.colors.push(color.r, color.g, color.b);
-                                geometryData.colors.push(color.r, color.g, color.b);
-                                geometryData.colors.push(color.r, color.g, color.b);
+                                targetArray.push(v0.x, v0.y, v0.z);
+                                targetArray.push(v1.x, v1.y, v1.z);
+                                targetArray.push(v2.x, v2.y, v2.z);
                             }
                         });
                     }
                 });
 
-                // Update points for next step
-                points = newPoints;
-
                 // 5. Update Visualization
-                if (cellMesh) {
-                    pivot.remove(cellMesh);
-                    cellMesh.geometry.dispose();
+                if (staticMesh) {
+                    pivot.remove(staticMesh);
+                    staticMesh.geometry.dispose();
+                }
+                if (moverMesh) {
+                    pivot.remove(moverMesh);
+                    moverMesh.geometry.dispose();
                 }
 
-                const geometry = new THREE.BufferGeometry();
-                geometry.setAttribute('position', new THREE.Float32BufferAttribute(geometryData.positions, 3));
-                geometry.setAttribute('color', new THREE.Float32BufferAttribute(geometryData.colors, 3));
-                geometry.computeVertexNormals();
+                // Static Mesh (Transparent White)
+                const staticGeo = new THREE.BufferGeometry();
+                staticGeo.setAttribute('position', new THREE.Float32BufferAttribute(staticPositions, 3));
+                staticGeo.computeVertexNormals();
 
-                const material = new THREE.MeshStandardMaterial({
-                    vertexColors: true,
+                const staticMat = new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
                     roughness: 0.5,
                     metalness: 0.1,
-                    polygonOffset: true,
-                    polygonOffsetFactor: 1, // Reduce z-fighting with edges if we added them
                     transparent: true,
-                    opacity: 0.9
+                    opacity: 0.1,
+                    side: THREE.DoubleSide,
+                    depthWrite: false // Helps with transparency
                 });
 
-                cellMesh = new THREE.Mesh(geometry, material);
-                cellMesh.position.set(-5, -5, -5);
-                pivot.add(cellMesh);
+                staticMesh = new THREE.Mesh(staticGeo, staticMat);
+                staticMesh.position.set(-5, -5, -5);
+                pivot.add(staticMesh);
 
-                // Cleanup
-                context.clear();
-                context.delete();
+                // Mover Mesh (Colored, e.g., Red)
+                const moverGeo = new THREE.BufferGeometry();
+                moverGeo.setAttribute('position', new THREE.Float32BufferAttribute(moverPositions, 3));
+                moverGeo.computeVertexNormals();
+
+                const moverMat = new THREE.MeshStandardMaterial({
+                    color: 0xff3333,
+                    roughness: 0.2,
+                    metalness: 0.5,
+                    transparent: true,
+                    opacity: 0.8,
+                    side: THREE.DoubleSide
+                });
+
+                moverMesh = new THREE.Mesh(moverGeo, moverMat);
+                moverMesh.position.set(-5, -5, -5);
+                pivot.add(moverMesh);
+
+                // Context is reused
             }
 
             function resetSimulation() {
                 generatePoints();
-                performRelaxationStep(); // Initial render
-                lastStepTime = Date.now();
+                initContext();
+                updateVoronoi();
             }
 
             // Initialize
@@ -305,14 +255,25 @@
             function animate() {
                 requestAnimationFrame(animate);
                 
-                pivot.rotation.y += 0.005;
+                pivot.rotation.y += 0.002;
 
                 if (params.autoRun) {
-                    const now = Date.now();
-                    if (now - lastStepTime > params.stepInterval * 1000) {
-                        performRelaxationStep();
-                        lastStepTime = now;
-                    }
+                    // Update Mover Position
+                    mover.x += mover.vx * params.velocity;
+                    mover.y += mover.vy * params.velocity;
+                    mover.z += mover.vz * params.velocity;
+
+                    // Bounce
+                    if (mover.x < bounds.minX || mover.x > bounds.maxX) mover.vx *= -1;
+                    if (mover.y < bounds.minY || mover.y > bounds.maxY) mover.vy *= -1;
+                    if (mover.z < bounds.minZ || mover.z > bounds.maxZ) mover.vz *= -1;
+
+                    // Clamp to be safe
+                    mover.x = Math.max(bounds.minX, Math.min(bounds.maxX, mover.x));
+                    mover.y = Math.max(bounds.minY, Math.min(bounds.maxY, mover.y));
+                    mover.z = Math.max(bounds.minZ, Math.min(bounds.maxZ, mover.z));
+
+                    updateVoronoi();
                 }
 
                 controls.update();
@@ -332,7 +293,7 @@
                 if (event.key === 'p') {
                     renderer.render(scene, camera);
                     const link = document.createElement('a');
-                    link.download = 'voronoi_relaxation.png';
+                    link.download = 'moving_cell.png';
                     link.href = renderer.domElement.toDataURL('image/png');
                     link.click();
                 }

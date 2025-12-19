@@ -7,26 +7,26 @@ An [Emscripten](https://emscripten.org/) implementation of [voro++](https://gith
 <table>
   <tr>
     <td align="center">
-      <a href="https://mdt-re.github.io/voro-js/examples/basic_3d_visualization.html">
-        <img src="https://placehold.co/600x400?text=Basic+3D" width="250px" alt="Basic 3D Visualization" /><br />
-        <b>Basic 3D Visualization</b>
+      <a href="https://mdt-re.github.io/voro-js/examples/moving_cell.html">
+        <img src="examples/assets/moving_cell.png" width="250px" alt="Moving Cell" /><br />
+        <b>Moving Cell</b>
       </a>
     </td>
     <td align="center">
-      <a href="https://mdt-re.github.io/voro-js/examples/shaded_faces_visualization.html">
-        <img src="https://placehold.co/600x400?text=Shaded+Faces" width="250px" alt="Shaded Faces Visualization" /><br />
-        <b>Shaded Faces Visualization</b>
+      <a href="https://mdt-re.github.io/voro-js/examples/single_cell.html">
+        <img src="examples/assets/single_cell.png" width="250px" alt="Single Cell" /><br />
+        <b>Single Cell</b>
       </a>
     </td>
     <td align="center">
       <a href="https://mdt-re.github.io/voro-js/examples/voronoi_relaxation.html">
-        <img src="https://placehold.co/600x400?text=Relaxation" width="250px" alt="Voronoi Relaxation" /><br />
+        <img src="examples/assets/voronoi_relaxation.png" width="250px" alt="Voronoi Relaxation" /><br />
         <b>Voronoi Relaxation</b>
       </a>
     </td>
   </tr>
 </table>
-See the examples [README](./examples/README.md) for detailed instructions on how to run or deploy them.
+See the examples [README](examples/README.md) for detailed instructions on how to run or deploy them.
 
 ## Documentation
 
@@ -45,9 +45,11 @@ inside the repository directory and then link in the project directory with
 npm link @mdt-re/voro-js
 ```
 
-## Tests
+## Development
 
 Testing is done using Mocha and Chai to verify the functionality of the Voro++ WebAssembly wrapper, in particular the elements `VoronoiContext3D` and `VoronoiCell3D`. To run the tests, execute the following command in the project directory:
 ```bash
 npm test
 ```
+
+Bugs and pull requests can be posted in the issues [tracker](https://github.com/mdt-re/voro-js/issues).
