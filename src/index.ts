@@ -21,7 +21,7 @@ export interface VectorDouble extends EmscriptenObject {
 }
 
 export interface VoronoiCell3D extends EmscriptenObject {
-	initBox(xmin: number, xmax: number, ymin: number, ymax: number, zmin: number, zmax: number): void;
+	updateBox(xmin: number, xmax: number, ymin: number, ymax: number, zmin: number, zmax: number): void;
 	cutPlane(x: number, y: number, z: number): boolean;
 	cutPlaneR(x: number, y: number, z: number, rsq: number): boolean;
 	getCellRaw(): any;

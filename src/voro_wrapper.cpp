@@ -179,29 +179,29 @@ public:
 	// adds a single plane wall to the container with normal vector (x, y, z) and displacement d
 	void addWallPlane(double x, double y, double z, double d, int id=-99)
 	{
-		voro::wall_plane plane(x, y, z, d, id);
-		con.add_wall(plane);
+		voro::wall_plane* plane = new voro::wall_plane(x, y, z, d, id);
+		con.add_wall(*plane);
 	}
 	
 	// adds a spherical wall to the container with center (x, y, z) and radius r
 	void addWallSphere(double x, double y, double z, double r, int id=-99)
 	{
-		voro::wall_sphere sphere(x, y, z, r, id);
-		con.add_wall(sphere);
+		voro::wall_sphere* sphere = new voro::wall_sphere(x, y, z, r, id);
+		con.add_wall(*sphere);
 	}
 	
 	// adds an open cylindrical wall to the container with axis point (ax, ay, az) axis vector (vx, vy, vz) and radius r
 	void addWallCylinder(double ax, double ay, double az, double vx, double vy, double vz, double r, int id=-99)
 	{
-		voro::wall_cylinder cylinder(ax, ay, az, vx, vy, vz, r, id);
-		con.add_wall(cylinder);
+		voro::wall_cylinder* cylinder = new voro::wall_cylinder(ax, ay, az, vx, vy, vz, r, id);
+		con.add_wall(*cylinder);
 	}
 	
 	// adds a conal wall to the container with apex point (ax, ay, az) axis vector (vx, vy, vz) and angle a (in radians)
 	void addWallCone(double ax, double ay, double az, double vx, double vy, double vz, double a, int id=-99)
 	{
-		voro::wall_cone cone(ax, ay, az, vx, vy, vz, a, id);
-		con.add_wall(cone);
+		voro::wall_cone* cone = new voro::wall_cone(ax, ay, az, vx, vy, vz, a, id);
+		con.add_wall(*cone);
 	}
 	
 	void addWallJS(emscripten::val js_wall)
@@ -391,6 +391,16 @@ class VoronoiCell3D
 public:
 	// Use the basic cell constructor, which allocates memory automatically.
 	VoronoiCell3D() {}
+
+	/** \brief Initializes cell as a rectangular box during construction.
+	 * \param[in] (xmin,xmax) the minimum and maximum x coordinates.
+	 * \param[in] (ymin,ymax) the minimum and maximum y coordinates.
+	 * \param[in] (zmin,zmax) the minimum and maximum z coordinates.
+	 */
+	VoronoiCell3D(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
+	{
+		cell.init(xmin, xmax, ymin, ymax, zmin, zmax);
+	}
 	
 	/** \brief Initializes cell as a rectangular box.
 	 *  Initializes the Voronoi cell to be rectangular box with the
@@ -399,7 +409,7 @@ public:
 	 * \param[in] (ymin,ymax) the minimum and maximum y coordinates.
 	 * \param[in] (zmin,zmax) the minimum and maximum z coordinates.
 	 */
-	void initBox(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
+	void updateBox(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
 	{
 		cell.init(xmin, xmax, ymin, ymax, zmin, zmax);
 	}
@@ -535,7 +545,8 @@ EMSCRIPTEN_BINDINGS(voro_module_3d)
 		
 	emscripten::class_<VoronoiCell3D>("VoronoiCell3D")
 		.constructor<>()
-		.function("initBox", &VoronoiCell3D::initBox)
+		.constructor<double, double, double, double, double, double>()
+		.function("updateBox", &VoronoiCell3D::updateBox)
 		.function("cutPlane", &VoronoiCell3D::cutPlane)
 		.function("cutPlaneR", &VoronoiCell3D::cutPlaneR)
 		.function("getCellRaw", &VoronoiCell3D::getCellRaw)
