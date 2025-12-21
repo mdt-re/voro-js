@@ -24,6 +24,8 @@ An [Emscripten](https://emscripten.org/) implementation of [voro++](https://gith
         <b>Voronoi Relaxation</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
           <a href="https://mdt-re.github.io/voro-js/examples/curve_game.html">
             <img src="examples/assets/curve_game.png" width="250px" alt="Curve Game" /><br />
@@ -36,14 +38,14 @@ An [Emscripten](https://emscripten.org/) implementation of [voro++](https://gith
             <b>Performance Demo</b>
           </a>
         </td>
-      </tr>
   </tr>
 </table>
-See the examples [README](examples/README.md) for detailed instructions on how to run or deploy them.
+
+See the [examples](examples) for detailed instructions on how to run or deploy them.
 
 ## Documentation
 
-Full API documentation, advanced usage, and a guide on memory management can be found in the docs.
+Full API documentation, advanced usage, and a guide on memory management can be found in the [docs](docs/README.md).
 
 ## Installation
 

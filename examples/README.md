@@ -1,4 +1,4 @@
-# Voro-js Examples
+# voro-js Examples
 
 <table>
   <tr>
@@ -20,6 +20,8 @@
         <b>Voronoi Relaxation</b>
       </a>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <a href="https://mdt-re.github.io/voro-js/examples/curve_game.html">
         <img src="assets/curve_game.png" width="250px" alt="Curve Game" /><br />
@@ -48,7 +50,9 @@ Open your browser and navigate to the respective example: `http://localhost:8080
 ## Deploying to GitHub Pages
 
 These examples are designed to work on GitHub Pages. An `index.html` file is included in this directory to serve as a landing page for the examples. To deploy, you need to activate the `.github/workflows/deploy.yml` by:
-    *   Go to the repository on GitHub.
-    *   Navigate to **Settings** > **Pages**.
-    *   Under **Build and deployment** > **Source**, select **GitHub Actions**.
+
+*   Go to the repository on GitHub.
+*   Navigate to **Settings** > **Pages**.
+*   Under **Build and deployment** > **Source**, select **GitHub Actions**.
+    
 Once deployed, your examples will be available at `https://<username>.github.io/<repo-name>/examples/`.
