@@ -1,5 +1,7 @@
 # voro-js Examples
 
+Click on the image to view the example. Each example corresponds to the respective source code in this folder.
+
 <table>
   <tr>
     <td align="center">

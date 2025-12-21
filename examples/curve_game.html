@@ -10,12 +10,16 @@
         #info {
             position: absolute;
             top: 10px;
-            width: 100%;
-            text-align: center;
+            left: 10px;
+            max-width: 300px;
+            text-align: left;
             color: #fff;
             z-index: 100;
             pointer-events: none;
             text-shadow: 1px 1px 2px black;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
         }
         #loading {
             position: absolute;
@@ -28,13 +32,14 @@
             padding: 20px;
             border-radius: 10px;
         }
+        h2 { margin: 0 0 5px 0; font-size: 1.2em; }
+        p { margin: 0; font-size: 0.9em; }
     </style>
 </head>
 <body>
     <div id="info">
         <h2>Curve Game</h2>
         <p>You are inside a cell moving along a mystery curve.<br>Can you guess the shape?</p>
-        <p style="font-size: 0.8em">(Press 'p' to save screenshot)</p>
     </div>
     <div id="loading">Loading Voro++ Module...</div>
 
@@ -52,6 +57,7 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import GUI from 'lil-gui';
+        import Stats from 'three/addons/libs/stats.module.js';
 
         // --- Main Application ---
         import('../dist/voro_browser.js').then(voroModule => {
@@ -176,6 +182,12 @@
             gui.add(curveParams, 'speed', 0.1, 2.0).name('Speed');
             gui.add(curveParams, 'reveal').name('Reveal Curve').onChange(v => curveLine.visible = v);
 
+            // Stats
+            const stats = new Stats();
+            stats.dom.style.cssText = 'position:relative;top:auto;left:auto;display:block;margin:10px auto;';
+            const statsFolder = gui.addFolder('Stats');
+            statsFolder.domElement.querySelector('.children').appendChild(stats.dom);
+
             function update() {
                 // 1. Calculate Mover Position
                 time += 0.01 * curveParams.speed;
@@ -229,6 +241,7 @@
 
             function animate() {
                 requestAnimationFrame(animate);
+                stats.update();
                 update();
                 controls.update();
                 renderer.render(scene, camera);

@@ -9,13 +9,19 @@
         #info {
             position: absolute;
             top: 10px;
-            width: 100%;
-            text-align: center;
+            left: 10px;
+            max-width: 300px;
+            text-align: left;
             color: white;
             font-family: sans-serif;
             pointer-events: none;
             text-shadow: 1px 1px 2px black;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
         }
+        h2 { margin: 0 0 5px 0; font-size: 1.2em; }
+        p { margin: 0; font-size: 0.9em; }
     </style>
     <!-- Import Three.js -->
     <script type="importmap">
@@ -30,15 +36,15 @@
 </head>
 <body>
     <div id="info">
-        <h2>Single Voronoi Cell Construction</h2>
-        <p>A central cell (0,0,0) shaped by random neighbor plane cuts.</p>
-        <p style="font-size: 0.8em">(Press 'p' to save screenshot)</p>
+        <h2>Single Cell</h2>
+        <p>A central cell shaped by random neighbor plane cuts.<br>Click on spheres to see their cutting plane.</p>
     </div>
     <div id="loading">Loading Voro++ Module...</div>
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { GUI } from 'lil-gui';
+        import Stats from 'three/addons/libs/stats.module.js';
         import { initializeVoro } from '../dist/index.js';
 
         // --- Main Application ---
@@ -97,16 +103,21 @@
             const spheresGroup = new THREE.Group();
             scene.add(spheresGroup);
 
+            const planesGroup = new THREE.Group();
+            scene.add(planesGroup);
+
             const params = {
                 count: 25,
                 visible: true
             };
 
+            let selectedIndex = -1;
+
             // --- Voronoi Cell Construction ---
             
             function generate() {
                 // Cleanup
-                [cellGroup, spheresGroup].forEach(g => {
+                [cellGroup, spheresGroup, planesGroup].forEach(g => {
                     g.traverse(c => {
                         if (c.isMesh) {
                             c.geometry.dispose();
@@ -116,6 +127,9 @@
                     });
                     g.clear();
                 });
+
+                // Reset selection
+                selectedIndex = -1;
 
                 // 1. Initialize a large container box for the cell centered at origin
                 // The box should be large enough to not clip the cell before the plane cuts define its shape
@@ -159,10 +173,26 @@
                     sphereMesh.receiveShadow = true;
                     spheresGroup.add(sphereMesh);
 
+                    // Create plane visualization
+                    const planeGeo = new THREE.PlaneGeometry(10, 10);
+                    const planeMat = new THREE.MeshBasicMaterial({ 
+                        color: color, 
+                        side: THREE.DoubleSide, 
+                        transparent: true, 
+                        opacity: 0.05,
+                        depthWrite: false
+                    });
+                    const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+                    planeMesh.position.set(x * 0.5, y * 0.5, z * 0.5);
+                    planeMesh.lookAt(x, y, z);
+                    planeMesh.visible = false;
+                    planesGroup.add(planeMesh);
+
                     neighborsData.push({ x, y, z, color });
                 }
                 
                 spheresGroup.visible = params.visible;
+                planesGroup.visible = true;
 
                 // 3. Extract geometry from Voro++
                 const cellData = cell.getCell();
@@ -196,24 +226,26 @@
 
                 // Triangulate faces and assign material groups
                 cellData.faces.forEach(faceIndices => {
-                    // Calculate face normal to find corresponding neighbor
-                    const v0 = cellData.vertices[faceIndices[0]];
-                    const v1 = cellData.vertices[faceIndices[1]];
-                    const v2 = cellData.vertices[faceIndices[2]];
-                    
-                    const ab = new THREE.Vector3(v1.x - v0.x, v1.y - v0.y, v1.z - v0.z);
-                    const ac = new THREE.Vector3(v2.x - v0.x, v2.y - v0.y, v2.z - v0.z);
-                    const normal = new THREE.Vector3().crossVectors(ab, ac).normalize();
+                    // Find the neighbor that generated this face
+                    // The face should lie on the plane bisecting the origin and the neighbor
+                    // Plane equation: P . N = |N|^2 / 2
+                    const faceCenter = new THREE.Vector3();
+                    faceIndices.forEach(idx => {
+                        const v = cellData.vertices[idx];
+                        faceCenter.add(new THREE.Vector3(v.x, v.y, v.z));
+                    });
+                    faceCenter.divideScalar(faceIndices.length);
 
-                    // Find the neighbor vector most parallel to the normal
-                    let bestDot = -1.0;
+                    let bestError = Infinity;
                     let materialIndex = 0;
 
                     neighborsData.forEach((n, idx) => {
-                        const nVec = new THREE.Vector3(n.x, n.y, n.z).normalize();
-                        const dot = normal.dot(nVec);
-                        if (dot > bestDot) {
-                            bestDot = dot;
+                        const nVec = new THREE.Vector3(n.x, n.y, n.z);
+                        const val = faceCenter.dot(nVec) - 0.5 * nVec.lengthSq();
+                        const error = Math.abs(val);
+                        
+                        if (error < bestError) {
+                            bestError = error;
                             materialIndex = idx;
                         }
                     });
@@ -266,12 +298,79 @@
             const gui = new GUI();
             gui.add(params, 'count', 10, 100, 1).name('Sphere Count').onChange(generate);
             gui.add(params, 'visible').name('Show Spheres').onChange(v => spheresGroup.visible = v);
+
+            // Stats
+            const stats = new Stats();
+            stats.dom.style.cssText = 'position:relative;top:auto;left:auto;display:block;margin:10px auto;';
+            const statsFolder = gui.addFolder('Stats');
+            statsFolder.domElement.querySelector('.children').appendChild(stats.dom);
             
             generate();
+
+            // --- Interaction ---
+            const raycaster = new THREE.Raycaster();
+            const pointer = new THREE.Vector2();
+
+            function onPointerMove( event ) {
+                pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+                pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            }
+
+            function onClick() {
+                if (!params.visible) return;
+
+                raycaster.setFromCamera(pointer, camera);
+                const intersects = raycaster.intersectObjects(spheresGroup.children);
+
+                // Reset visuals
+                planesGroup.children.forEach(p => p.visible = false);
+                spheresGroup.children.forEach(s => {
+                    s.material.emissive.setHex(0x000000);
+                });
+
+                // Reset cell faces
+                const cellMesh = cellGroup.children.find(c => Array.isArray(c.material));
+                if (cellMesh) {
+                    cellMesh.material.forEach(m => {
+                        m.emissive.setHex(0x000000);
+                        m.opacity = 0.8;
+                    });
+                }
+
+                selectedIndex = -1;
+
+                if (intersects.length > 0) {
+                    const object = intersects[0].object;
+                    const index = spheresGroup.children.indexOf(object);
+                    
+                    if (index !== -1) {
+                        selectedIndex = index;
+                        if (planesGroup.children[index]) {
+                            planesGroup.children[index].visible = true;
+                        }
+                        
+                        // Highlight sphere
+                        object.material.emissive.copy(object.material.color);
+                        object.material.emissiveIntensity = 0.5;
+
+                        // Highlight face
+                        if (cellMesh && cellMesh.material[index]) {
+                            const m = cellMesh.material[index];
+                            m.emissive.copy(m.color);
+                            m.emissiveIntensity = 0.5;
+                            m.opacity = 1.0;
+                        }
+                    }
+                }
+            }
+
+            window.addEventListener( 'pointermove', onPointerMove );
+            window.addEventListener( 'click', onClick );
 
             // --- Animation Loop ---
             function animate() {
                 requestAnimationFrame(animate);
+                stats.update();
 
                 controls.update();
                 renderer.render(scene, camera);
