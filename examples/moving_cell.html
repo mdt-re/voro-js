@@ -162,7 +162,12 @@
             }
 
             function updateVoronoi() {
-                // 1. Update Mover Position (ID 0)
+                // 1. Clear and Re-populate
+                context.clear();
+                
+                points.forEach((p, i) => {
+                    context.addPoint(i + 1, p.x, p.y, p.z);
+                });
                 context.addPoint(0, mover.x, mover.y, mover.z);
 
                 // 3. Compute Cells
@@ -172,8 +177,8 @@
                 const staticPositions = [];
                 const moverPositions = [];
 
-                cells.forEach((cell, i) => {
-                    const isMover = (i === 0);
+                cells.forEach((cell) => {
+                    const isMover = (cell.id === 0);
                     const targetArray = isMover ? moverPositions : staticPositions;
 
                     if (cell.vertices && cell.faces) {

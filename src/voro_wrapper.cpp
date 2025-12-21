@@ -166,6 +166,8 @@ public:
 		con.put(id, x, y, z);
 	}
 
+	// TODO: a method to update a point
+
 	// adds multiple 3d points to the container
 	void addPoints(const std::vector<int>& ids, const std::vector<double>& x_coords, const std::vector<double>& y_coords, const std::vector<double>& z_coords)
 	{
