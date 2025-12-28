@@ -31,6 +31,12 @@ Click on the image to view the example. Each example corresponds to the respecti
       </a>
     </td>
     <td align="center">
+      <a href="https://mdt-re.github.io/voro-js/examples/custom_geometry.html">
+        <img src="assets/custom_geometry.png" width="250px" alt="Custom Geometry" /><br />
+        <b>Custom Geometry</b>
+      </a>
+    </td>
+    <td align="center">
       <a href="https://mdt-re.github.io/voro-js/examples/performance_demo.html">
         <img src="assets/voro_performance.png" width="250px" alt="Performance Demo" /><br />
         <b>Performance Demo</b>
@@ -45,7 +51,7 @@ Due to browser security restrictions regarding WebAssembly and ES modules (CORS)
 ```bash
 npm install
 npm run build
-npx http-server
+npm run serve
 ```
 Open your browser and navigate to the respective example: `http://localhost:8080/examples/<example>.html`.
 

@@ -44,18 +44,13 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Prepare deployment artifact
-        run: |
-          mkdir _site
-          cp -r dist _site/
-          cp -r examples _site/
-          # Create a redirect from root to examples
-          echo '<meta http-equiv="refresh" content="0; url=examples/" />' > _site/index.html
+      - name: Prepare artifact
+        run: echo '<meta http-equiv="refresh" content="0; url=examples/" />' > dist/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '_site'
+          path: 'dist'
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4

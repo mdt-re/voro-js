@@ -27,21 +27,27 @@ An [Emscripten](https://emscripten.org/) implementation of [voro++](https://gith
   </tr>
   <tr>
     <td align="center">
-          <a href="https://mdt-re.github.io/voro-js/examples/curve_game.html">
-            <img src="examples/assets/curve_game.png" width="250px" alt="Curve Game" /><br />
-            <b>Curve Game</b>
-          </a>
-        </td>
-        <td align="center">
-          <a href="https://mdt-re.github.io/voro-js/examples/performance_demo.html">
-            <img src="examples/assets/voro_performance.png" width="250px" alt="Performance Demo" /><br />
-            <b>Performance Demo</b>
-          </a>
-        </td>
+      <a href="https://mdt-re.github.io/voro-js/examples/curve_game.html">
+        <img src="examples/assets/curve_game.png" width="250px" alt="Curve Game" /><br />
+        <b>Curve Game</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://mdt-re.github.io/voro-js/examples/custom_geometry.html">
+        <img src="examples/assets/custom_geometry.png" width="250px" alt="Custom Geometry" /><br />
+        <b>Custom Geometry</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://mdt-re.github.io/voro-js/examples/performance_demo.html">
+        <img src="examples/assets/voro_performance.png" width="250px" alt="Performance Demo" /><br />
+        <b>Performance Demo</b>
+      </a>
+    </td>
   </tr>
 </table>
 
-See the [examples](examples) for detailed instructions on how to run or deploy them.
+See the [examples](examples) folder for detailed instructions on how to run or deploy them.
 
 ## Documentation
 

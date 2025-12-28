@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "ES2020",
+		"moduleResolution": "bundler",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"outDir": "../dist/examples",
+		"rootDir": "."
+	},
+	"include": ["./*.ts", "./*.d.ts", "ts/curve_game.ts", "ts/single_cell.ts", "ts/voronoi_walls.ts", "ts/voronoi_relaxation.ts", "ts/performance_demo.ts", "ts/moving_cell.ts", "ts/custom_geometry.ts"]
+}
